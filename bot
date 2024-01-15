@@ -1,0 +1,50 @@
+import tweepy
+import sqlite3 as db
+import os
+
+# Put your Twitter API keys and stuff here
+CONSUMER_KEY = ""
+CONSUMER_SECRET = ""
+ACCESS_TOKEN = ""
+ACCESS_TOKEN_SECRET = ""
+
+auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+api = tweepy.API(auth)
+
+# Connect to the SQLite database that was created in setupbot.py
+connection = db.connect("framebot.db")
+cursor = connection.cursor()
+
+# Enter the name of the show or video you're posting frames for here:
+show_name = "#HungryCheetah"
+
+# Put the number of frames the bot should post each time this script is run here.
+iters = 2
+
+while iters > 0:
+    # Get the number of the last frame that was uploaded, then add one to that number to get the number of the next frame to post.
+    next_frame = cursor.execute("SELECT last_frame FROM bot").fetchone()[0] + 1
+
+    # Get the total frames for the video.
+    total_frames = cursor.execute("SELECT total_frames FROM video").fetchone()[0]
+
+    # If the next_frame number is bigger than the total frames, reset to 1 for a continuous loop.
+    if next_frame > total_frames:
+        next_frame = 1
+
+    # Get the file path for the next frame to upload.
+    frame_path = f"./frames/frame_{next_frame}.jpg"
+
+    # The message to attach to the tweet
+    msg = f"{show_name} - Frame {next_frame} of {total_frames}"
+
+    # Send the Tweet
+    api.update_status_with_media(msg, frame_path)
+
+    # Update the database to reflect the most recently uploaded frame.
+    cursor.execute(f"UPDATE bot SET last_frame = {next_frame}")
+    connection.commit()
+
+    # Decrement the iteration counter
+    iters -= 1
