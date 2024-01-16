@@ -17,6 +17,7 @@ fps = int(cap.get(cv2.CAP_PROP_FPS))
 # Set the desired frame rate for the output images (24 fps in this case)
 desired_fps = 12
 
+
 # Calculate the frame interval to capture frames at the desired rate
 frame_interval = int(fps / desired_fps)
 
